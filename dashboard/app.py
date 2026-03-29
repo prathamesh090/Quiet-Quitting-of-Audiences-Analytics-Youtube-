@@ -514,7 +514,6 @@ data_source = st.sidebar.radio(
 )
 
 channel_input = None
-max_videos = 5
 selected_channel_id = None
 selected_channel_title = None
 analyze_api = False
@@ -526,7 +525,12 @@ if data_source == "Live API Data":
         st.sidebar.error("YOUTUBE_API_KEY not found in .env file")
 
     channel_input = st.sidebar.text_input("Search channel name")
-    max_videos = st.sidebar.slider("Number of videos to fetch", 3, 20, 5)
+    
+    # Initialize session state for max_videos if not present
+    if "max_videos" not in st.session_state:
+        st.session_state["max_videos"] = 5
+    
+    max_videos = st.sidebar.slider("Number of videos to fetch", 3, 20, value=st.session_state["max_videos"], key="max_videos_slider")
 
     if st.sidebar.button("Search Channels"):
         if channel_input.strip():
@@ -560,6 +564,15 @@ if data_source == "Live API Data":
                     st.caption(item["description"][:120])
 
         analyze_api = st.sidebar.button("Analyze Selected Channel")
+
+        # Auto-reanalyze if max_videos changed while keeping the same channel
+        if (
+            "active_channel_id" in st.session_state
+            and st.session_state["active_channel_id"] == selected_channel_id
+            and "last_max_videos" in st.session_state
+            and st.session_state["last_max_videos"] != max_videos
+        ):
+            analyze_api = True
 
 # =========================================================
 # API Fetch + Process
@@ -597,6 +610,8 @@ if data_source == "Live API Data" and analyze_api:
             st.session_state["api_report_df"] = report_df
             st.session_state["active_channel_title"] = selected_channel_title
             st.session_state["active_channel_id"] = selected_channel_id
+            st.session_state["last_max_videos"] = max_videos
+            st.session_state["max_videos"] = max_videos
 
         st.sidebar.success(f"Analysis completed for {selected_channel_title}")
 
@@ -762,19 +777,19 @@ with tab1:
                 "Selected Comments"
             ],
             "Value": [
-                metrics["risk_score"],
-                metrics["risk_label"],
-                round(metrics["avg_engagement"], 2),
+                str(metrics["risk_score"]),
+                str(metrics["risk_label"]),
+                str(round(metrics["avg_engagement"], 2)),
                 f"{metrics['positive_ratio']:.2%}",
                 f"{metrics['neutral_ratio']:.2%}",
                 f"{metrics['negative_ratio']:.2%}",
                 f"{metrics['keyword_ratio']:.2%}",
-                metrics["video_count"],
-                metrics["comment_count"]
+                str(metrics["video_count"]),
+                str(metrics["comment_count"])
             ]
         })
 
-        st.dataframe(summary_df, use_container_width=True, hide_index=True)
+        st.dataframe(summary_df, width='stretch', hide_index=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     with right:
@@ -796,8 +811,7 @@ with tab1:
             values="Ratio",
             hole=0.45
         )
-        fig_pie.update_layout(margin=dict(l=10, r=10, t=10, b=10))
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie, config={'displayModeBar': False, 'responsive': True, 'use_container_width': True})
         st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================================================
@@ -822,8 +836,7 @@ with tab2:
                 y="Count",
                 text="Count"
             )
-            fig_bar.update_layout(margin=dict(l=10, r=10, t=10, b=10))
-            st.plotly_chart(fig_bar, use_container_width=True)
+            st.plotly_chart(fig_bar, config={'displayModeBar': False, 'responsive': True, 'use_container_width': True})
             st.markdown("</div>", unsafe_allow_html=True)
 
         with right:
@@ -838,7 +851,7 @@ with tab2:
             if negative_comments.empty:
                 st.info("No negative comments found for the selected filters.")
             else:
-                st.dataframe(negative_comments, use_container_width=True, hide_index=True)
+                st.dataframe(negative_comments, width='stretch', hide_index=True)
 
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -866,12 +879,11 @@ with tab3:
                 y="title",
                 orientation="h",
                 hover_data=[c for c in ["views", "likes", "comment_total"] if c in top_videos.columns]
-            )
-            fig_top.update_layout(
+            ).update_layout(
                 yaxis={"categoryorder": "total ascending"},
                 margin=dict(l=10, r=10, t=10, b=10)
             )
-            st.plotly_chart(fig_top, use_container_width=True)
+            st.plotly_chart(fig_top, config={'displayModeBar': False, 'responsive': True, 'use_container_width': True})
             st.markdown("</div>", unsafe_allow_html=True)
 
         with right:
@@ -883,8 +895,7 @@ with tab3:
                 x="engagement_score",
                 nbins=25
             )
-            fig_hist.update_layout(margin=dict(l=10, r=10, t=10, b=10))
-            st.plotly_chart(fig_hist, use_container_width=True)
+            st.plotly_chart(fig_hist, config={'displayModeBar': False, 'responsive': True, 'use_container_width': True})
             st.markdown("</div>", unsafe_allow_html=True)
 
         st.write("")
@@ -908,7 +919,7 @@ with tab3:
             filtered_videos[show_cols]
             .sort_values(by="engagement_score", ascending=False)
             .head(20),
-            use_container_width=True,
+            width='stretch',
             hide_index=True
         )
         st.markdown("</div>", unsafe_allow_html=True)
@@ -944,4 +955,4 @@ with tab4:
     else:
         st.write("Adjust filters to display relevant audience data.")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True) 

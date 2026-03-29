@@ -1,2 +1,2 @@
 positive_comment_ratio,neutral_comment_ratio,negative_comment_ratio,disengagement_keyword_ratio,average_engagement_score,low_engagement_video_ratio,repeated_title_ratio,quiet_quitting_risk_score,risk_label
-0.0907,0.8783,0.031,0.135,4.5763,0.7,0.0,50,Medium
+0.0978,0.8804,0.0217,0.4855,1.9831,0.7,0.0,50,Medium

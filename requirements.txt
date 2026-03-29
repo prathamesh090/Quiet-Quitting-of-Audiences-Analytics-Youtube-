@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 pandas
 numpy
 streamlit
@@ -5,3 +6,12 @@ plotly
 python-dotenv
 google-api-python-client
 requests
+=======
+pandas
+numpy
+streamlit
+plotly
+python-dotenv
+google-api-python-client
+requests
+>>>>>>> 9ea04c1 (Update processed/raw API data and requirements)
